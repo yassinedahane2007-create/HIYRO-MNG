@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mangax Admin - لوحة التحكم</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --accent:#22c55e;--accent-dark:#15803d;--accent-soft:rgba(34,197,94,.15);
+  --bg:#0b0c0d;--bg2:#141517;--card:#1a1b1e;--card2:#202226;
+  --text:#f3f4f6;--muted:#9aa0a6;--border:#2a2c30;--danger:#ef4444;--warn:#f59e0b;--gold:#eab308;
+  --radius:16px;--radius-sm:10px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Tajawal',sans-serif;}
+a{color:inherit;text-decoration:none;} button{font-family:inherit;cursor:pointer;border:none;}
+input,select,textarea{font-family:inherit;} img{max-width:100%;display:block;}
+::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px;}
+#wrap{max-width:1200px;margin:0 auto;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:30;}
+.brand{display:flex;align-items:center;gap:8px;font-weight:900;font-size:18px;}
+.brand i{color:var(--accent);font-size:22px;}
+.icon-btn{width:38px;height:38px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--text);font-size:18px;}
+#app{padding:16px;min-height:80vh;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 18px;border-radius:var(--radius-sm);background:var(--accent);color:#06140a;font-weight:800;font-size:13.5px;}
+.btn.outline{background:transparent;border:1.5px solid var(--border);color:var(--text);}
+.btn.danger{background:var(--danger);color:#fff;}
+.btn.ghost{background:var(--card);color:var(--text);}
+.btn.gold{background:linear-gradient(90deg,var(--gold),#fbbf24);color:#3a2a00;}
+.btn.warn{background:var(--warn);color:#fff;}
+.btn.sm{padding:7px 12px;font-size:12px;}
+.btn[disabled]{opacity:.5;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
+.input-wrap{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;}
+.input-wrap input,.input-wrap select{flex:1;background:transparent;border:none;color:var(--text);padding:12px 8px;font-size:14px;outline:none;}
+textarea.ta{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:12px;font-size:14px;outline:none;resize:vertical;min-height:80px;}
+.grid{display:grid;gap:14px;}
+.grid-stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+.grid-2{grid-template-columns:1fr 1fr;}
+.grid-3{grid-template-columns:1fr 1fr 1fr;}
+.grid-charts{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;border:1px solid var(--border);}
+.stat-card{background:var(--card);border-radius:14px;padding:16px;border:1px solid var(--border);}
+.stat-card i{font-size:22px;color:var(--accent);margin-bottom:8px;}
+.stat-card .num{font-size:24px;font-weight:900;}
+.stat-card .lbl{font-size:12px;color:var(--muted);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{padding:10px 8px;text-align:right;border-bottom:1px solid var(--border);}
+th{color:var(--muted);font-size:12px;font-weight:700;}
+tr:hover td{background:var(--card2);}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:700;padding:4px 9px;border-radius:14px;}
+.chip.warn{background:rgba(245,158,11,.15);color:var(--warn);}
+.chip.danger{background:rgba(239,68,68,.15);color:var(--danger);}
+.chip.gray{background:var(--card2);color:var(--muted);}
+.chip.gold{background:rgba(234,179,8,.15);color:var(--gold);}
+.badge{display:inline-flex;align-items:center;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:8px;color:#06140a;vertical-align:middle;}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-title h2{font-size:18px;margin:0;}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+.menu-tile{background:var(--card);border-radius:14px;padding:18px 12px;text-align:center;border:1px solid var(--border);}
+.menu-tile i{font-size:26px;color:var(--accent);margin-bottom:8px;display:block;}
+.menu-tile span{font-size:12.5px;font-weight:700;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-box{background:var(--bg2);border-radius:18px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-box h3{margin:0 0 16px;font-size:16px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2023;color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;z-index:300;}
+.row{display:flex;align-items:center;gap:8px;}
+.between{justify-content:space-between;}
+.muted{color:var(--muted);}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state i{font-size:50px;color:var(--accent);display:block;margin-bottom:10px;}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;margin:40px auto;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:290px;background:var(--bg2);z-index:250;transform:translateX(100%);transition:.25s;padding:18px;overflow-y:auto;}
+.drawer.open{transform:translateX(0);}
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:240;display:none;}
+.drawer-overlay.show{display:block;}
+.drawer a{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:10px;font-size:13.5px;font-weight:600;}
+.drawer a:hover{background:var(--card);}
+.drawer a i{color:var(--accent);font-size:18px;}
+.tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;}
+.tab{padding:8px 16px;border-radius:18px;background:var(--card);color:var(--muted);font-size:12.5px;font-weight:700;white-space:nowrap;border:1px solid var(--border);}
+.tab.active{background:var(--accent);color:#06140a;border-color:var(--accent);}
+.drop-zone{border:2px dashed var(--border);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:.2s;}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:var(--accent-soft);}
+.page-thumb{position:relative;display:inline-block;}
+.page-thumb img{width:80px;height:110px;object-fit:cover;border-radius:8px;}
+.page-thumb .rm{position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;}
+.sortable-pages{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+@media(max-width:640px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="topbar">
+    <div class="brand"><i class="ri-book-read-fill"></i> Mangax Admin</div>
+    <div class="row">
+      <span id="admin-pts" style="display:none;background:rgba(234,179,8,.15);color:var(--gold);font-size:12.5px;font-weight:800;padding:6px 12px;border-radius:20px"></span>
+      <button class="icon-btn" onclick="toggleDrawer()"><i class="ri-menu-line"></i></button>
+    </div>
+  </div>
+  <div id="app"></div>
+</div>
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+const SUPABASE_URL = 'https://dgexhvqiirkmodskijoc.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Yk4gK6_6Ea2ObPA7whlzdQ_6cufPSqW';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const TYPE_LABEL = {manga:'مانجا',manhwa:'مانهوا',manhua:'مانهوا صينية'};
+const TIER_NAMES = {1:'محارب',2:'أساطير',3:'أسلاف'};
+const state = {user:null, profile:null};
+
+function toast(msg){ const r=document.getElementById('toast-root'); const e=document.createElement('div'); e.className='toast'; e.textContent=msg; r.appendChild(e); setTimeout(()=>e.remove(),2400); }
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function go(r){ location.hash=r; }
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+function openModal(html){ document.getElementById('modal-root').innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal-box">${html}</div></div>`; }
+function toggleDrawer(){ const d=document.getElementById('drawer'); const o=document.getElementById('drawer-overlay'); if(!d.classList.contains('open')) renderDrawer(); d.classList.toggle('open'); o.classList.toggle('show'); }
+function renderDrawer(){
+  const items=[
+    ['#/dashboard','ri-dashboard-3-line','🏠 الإحصائيات'],
+    ['#/series','ri-book-2-line','📚 إدارة الأعمال'],
+    ['#/users','ri-team-line','👥 إدارة المستخدمين'],
+    ['#/subscription-requests','ri-vip-crown-2-line','⭐ طلبات الاشتراك'],
+    ['#/plans','ri-price-tag-3-line','💎 باقات الاشتراك'],
+    ['#/points-requests','ri-coin-line','🪙 طلبات النقاط'],
+    ['#/points-manager','ri-exchange-funds-line','⚖️ إدارة النقاط'],
+    ['#/avatar-store','ri-user-star-line','🖼️ متجر البروفيلات'],
+    ['#/chapters-lock','ri-lock-2-line','🔐 قفل الفصول'],
+    ['#/direct-links','ri-link','🔗 الروابط المباشرة'],
+    ['#/ads','ri-advertisement-line','📢 الإعلانات (4 مواضع)'],
+    ['#/news','ri-newspaper-line','📰 الأخبار'],
+    ['#/polls','ri-bar-chart-box-line','📊 التصويتات'],
+    ['#/forum-admin','ri-discuss-line','💬 إدارة المنتدى'],
+    ['#/faq-admin','ri-question-answer-line','❓ الأسئلة الشائعة'],
+    ['#/support-admin','ri-customer-service-2-line','🎧 الدعم والتواصل'],
+    ['#/settings','ri-settings-3-line','⚙️ الإعدادات'],
+  ];
+  document.getElementById('drawer').innerHTML=`<div class="row between" style="margin-bottom:18px"><b>القائمة</b><button class="icon-btn" onclick="toggleDrawer()"><i class="ri-close-line"></i></button></div>
+  ${items.map(([r,i,l])=>`<a href="${r}" onclick="toggleDrawer()"><i class="${i}"></i>${l}</a>`).join('')}
+  <div style="height:1px;background:var(--border);margin:10px 0"></div>
+  <a href="#" onclick="doLogout();return false;"><i class="ri-logout-box-line" style="color:var(--danger)"></i>تسجيل الخروج</a>
+  <a href="index.html" target="_blank"><i class="ri-external-link-line"></i>فتح التطبيق</a>`;
+}
+
+async function refreshSession(){
+  const {data:{session}}=await sb.auth.getSession();
+  state.user=session?.user||null;
+  if(state.user){ const {data}=await sb.from('profiles').select('*, subscription_plans(*)').eq('id',state.user.id).single(); state.profile=data; }
+  else state.profile=null;
+  const pts=document.getElementById('admin-pts');
+  if(state.user){ pts.style.display='flex'; pts.textContent='⭐ '+(state.profile?.points||0)+' نقطة'; }
+  else pts.style.display='none';
+}
+function isAdmin(){ return state.profile && state.profile.role==='admin'; }
+
+/* ============ ROUTER ============ */
+const routes={};
+function route(p,fn){ routes[p]=fn; }
+async function renderRoute(){
+  await refreshSession();
+  const hash=location.hash||'#/login';
+  const segs=hash.split('/').filter(Boolean);
+  let matched=routes[hash]; let params={};
+  if(!matched){ for(const key in routes){ const ks=key.split('/').filter(Boolean); if(ks.length!==segs.length) continue; let ok=true; const p={}; for(let i=0;i<ks.length;i++){ if(ks[i].startsWith(':')) p[ks[i].slice(1)]=segs[i]; else if(ks[i]!==segs[i]){ok=false;break;} } if(ok){ matched=routes[key]; params=p; break; } } }
+  if(hash!=='#/login'&&!isAdmin()){ document.getElementById('app').innerHTML=`<div class="empty-state"><i class="ri-lock-2-line"></i><h3>غير مصرح</h3><a class="btn" href="#/login" style="margin-top:14px">تسجيل الدخول</a></div>`; return; }
+  if(!matched){ document.getElementById('app').innerHTML=`<div class="empty-state"><i class="ri-error-warning-line"></i><h3>404</h3></div>`; return; }
+  try{ await matched(params); }catch(e){ console.error(e); toast('حدث خطأ'); }
+}
+window.addEventListener('hashchange',renderRoute);
+
+/* ============ LOGIN ============ */
+route('#/login',async()=>{
+  if(isAdmin()){ go('#/dashboard'); return; }
+  document.getElementById('app').innerHTML=`<div style="max-width:400px;margin:50px auto 0;padding:0 16px">
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="width:80px;height:80px;border-radius:24px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:36px;color:var(--accent)"><i class="ri-shield-star-fill"></i></div>
+    <h2 style="margin:0;font-size:22px">لوحة التحكم</h2>
+    <p class="muted" style="font-size:12.5px;margin-top:4px">Mangax Admin Panel</p>
+  </div>
+  <div class="card" style="padding:24px">
+    <div class="field"><label>البريد الإلكتروني</label><div class="input-wrap"><i class="ri-mail-line"></i><input id="ad-email" type="email" placeholder="admin@example.com"></div></div>
+    <div class="field"><label>كلمة المرور</label><div class="input-wrap"><i class="ri-lock-line"></i><input id="ad-pass" type="password" placeholder="••••••••"></div></div>
+    <button class="btn" style="width:100%;padding:14px;font-size:15px" onclick="adminLogin()"><i class="ri-login-box-line"></i> تسجيل الدخول</button>
+  </div>
+  <p class="muted" style="font-size:11.5px;margin-top:14px;text-align:center">للترقية لأدمن: update profiles set role='admin' where email='...'</p></div>`;
+});
+async function adminLogin(){
+  const email=document.getElementById('ad-email').value.trim();
+  const password=document.getElementById('ad-pass').value;
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  if(error) return toast('بيانات الدخول غير صحيحة');
+  await refreshSession();
+  if(!isAdmin()){ toast('هذا الحساب ليس أدمن'); await sb.auth.signOut(); return; }
+  toast('مرحباً بك'); go('#/dashboard');
+}
+async function doLogout(){ await sb.auth.signOut(); state.user=null; state.profile=null; go('#/login'); }
+
+/* ============ DASHBOARD ============ */
+route('#/dashboard',async()=>{
+  document.getElementById('app').innerHTML=`<div class="spinner"></div>`;
+  const [seriesC,chapC,usersC,activeSubC,pendingSubC,pendingPtsC]=await Promise.all([
+    sb.from('series').select('*',{count:'exact',head:true}),
+    sb.from('chapters').select('*',{count:'exact',head:true}),
+    sb.from('profiles').select('*',{count:'exact',head:true}),
+    sb.from('profiles').select('*',{count:'exact',head:true}).eq('subscription_status','active'),
+    sb.from('subscription_requests').select('*',{count:'exact',head:true}).eq('status','pending'),
+    sb.from('points_requests').select('*',{count:'exact',head:true}).eq('status','pending'),
+  ]);
+  const {data:topSeries}=await sb.from('series').select('title,views').order('views',{ascending:false}).limit(6);
+  const {data:allProfiles}=await sb.from('profiles').select('subscription_status,created_at,points');
+  const totalPoints=(allProfiles||[]).reduce((s,p)=>s+(p.points||0),0);
+
+  document.getElementById('app').innerHTML=`
+  <div class="section-title"><h2>لوحة التحكم</h2><button class="btn sm outline" onclick="renderRoute()"><i class="ri-refresh-line"></i>تحديث</button></div>
+  <div class="grid grid-stats" style="margin-bottom:20px">
+    ${statCard('ri-team-fill',usersC.count||0,'إجمالي المستخدمين')}
+    ${statCard('ri-book-2-fill',seriesC.count||0,'إجمالي الأعمال')}
+    ${statCard('ri-file-text-fill',chapC.count||0,'إجمالي الفصول')}
+    ${statCard('ri-vip-crown-fill',activeSubC.count||0,'مشتركون نشطون')}
+    ${statCard('ri-time-fill',pendingSubC.count||0,'طلبات اشتراك معلّقة')}
+    ${statCard('ri-coin-fill',totalPoints,'إجمالي النقاط المتداولة')}
+    ${statCard('ri-shopping-cart-2-fill',pendingPtsC.count||0,'طلبات نقاط معلّقة')}
+  </div>
+  <div class="grid grid-charts">
+    <div class="card"><h3 style="margin:0 0 12px;font-size:14px">الأعمال الأكثر مشاهدة</h3><canvas id="chartTop"></canvas></div>
+    <div class="card"><h3 style="margin:0 0 12px;font-size:14px">حالة الاشتراكات</h3><canvas id="chartSubs"></canvas></div>
+    <div class="card"><h3 style="margin:0 0 12px;font-size:14px">تسجيلات آخر 7 أيام</h3><canvas id="chartUsers"></canvas></div>
+  </div>
+  <div class="menu-grid" style="margin-top:20px">
+    ${menuTile('#/series','ri-book-2-line','إدارة الأعمال')}
+    ${menuTile('#/users','ri-team-line','المستخدمون')}
+    ${menuTile('#/subscription-requests','ri-vip-crown-2-line','طلبات الاشتراك')}
+    ${menuTile('#/points-requests','ri-coin-line','طلبات النقاط')}
+    ${menuTile('#/points-manager','ri-exchange-funds-line','إدارة النقاط')}
+    ${menuTile('#/avatar-store','ri-user-star-line','متجر البروفيلات')}
+    ${menuTile('#/chapters-lock','ri-lock-2-line','قفل الفصول')}
+    ${menuTile('#/direct-links','ri-link','الروابط المباشرة')}
+    ${menuTile('#/ads','ri-advertisement-line','الإعلانات')}
+    ${menuTile('#/faq-admin','ri-question-answer-line','الأسئلة الشائعة')}
+    ${menuTile('#/support-admin','ri-customer-service-2-line','الدعم')}
+    ${menuTile('#/polls','ri-bar-chart-box-line','التصويتات')}
+    ${menuTile('#/news','ri-newspaper-line','الأخبار')}
+    ${menuTile('#/settings','ri-settings-3-line','الإعدادات')}
+  </div>`;
+
+  new Chart(document.getElementById('chartTop'),{type:'bar',data:{labels:(topSeries||[]).map(s=>s.title),datasets:[{data:(topSeries||[]).map(s=>s.views||0),backgroundColor:'#22c55e',borderRadius:6}]},options:chartOpts(false)});
+  const sts=['free','pending','active','expired']; const scts=sts.map(s=>(allProfiles||[]).filter(p=>p.subscription_status===s).length);
+  new Chart(document.getElementById('chartSubs'),{type:'doughnut',data:{labels:['مجاني','معلق','نشط','منتهي'],datasets:[{data:scts,backgroundColor:['#6b7280','#f59e0b','#22c55e','#ef4444']}]},options:{plugins:{legend:{labels:{color:'#9aa0a6'}}}}});
+  const days=[]; const dcounts=[];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const key=d.toISOString().slice(0,10); days.push(key.slice(5)); dcounts.push((allProfiles||[]).filter(p=>p.created_at&&p.created_at.slice(0,10)===key).length); }
+  new Chart(document.getElementById('chartUsers'),{type:'line',data:{labels:days,datasets:[{data:dcounts,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.2)',fill:true,tension:.3}]},options:chartOpts(false)});
+});
+function statCard(icon,num,lbl){ return `<div class="stat-card"><i class="${icon}"></i><div class="num">${num}</div><div class="lbl">${lbl}</div></div>`; }
+function menuTile(route,icon,label){ return `<a class="menu-tile" href="${route}"><i class="${icon}"></i><span>${label}</span></a>`; }
+function chartOpts(legend){ return {plugins:{legend:{display:legend}},scales:{x:{ticks:{color:'#9aa0a6'},grid:{color:'#2a2c30'}},y:{ticks:{color:'#9aa0a6'},grid:{color:'#2a2c30'}}}}; }
+
+/* ============ SERIES MANAGEMENT ============ */
+route('#/series',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>إدارة الأعمال</h2><button class="btn" onclick="openSeriesForm()"><i class="ri-add-line"></i>إضافة عمل</button></div>
+  <div class="field"><div class="input-wrap"><i class="ri-search-line"></i><input placeholder="بحث..." oninput="loadSeriesTable(this.value)"></div></div>
+  <div id="series-table"><div class="spinner"></div></div>`;
+  loadSeriesTable('');
+});
+async function loadSeriesTable(q){
+  let query=sb.from('series').select('*').order('created_at',{ascending:false});
+  if(q) query=query.ilike('title','%'+q+'%');
+  const {data}=await query.limit(80);
+  document.getElementById('series-table').innerHTML=(data&&data.length)?`<div class="card" style="overflow-x:auto"><table>
+  <tr><th>الغلاف</th><th>العنوان</th><th>النوع</th><th>الحالة</th><th>المشاهدات</th><th>التقييم</th><th>إجراءات</th></tr>
+  ${data.map(s=>`<tr>
+    <td><img src="${s.cover_image||''}" style="width:38px;height:52px;object-fit:cover;border-radius:6px"></td>
+    <td>${escapeHtml(s.title)}</td><td>${TYPE_LABEL[s.series_type]||''}</td>
+    <td>${s.status==='ongoing'?'<span class="chip">مستمر</span>':s.status==='completed'?'<span class="chip gold">مكتمل</span>':'<span class="chip warn">قريباً</span>'}</td>
+    <td>${s.views||0}</td><td>${(s.rating_avg||0).toFixed(1)}</td>
+    <td><div class="row">
+      <button class="btn sm ghost" onclick='openSeriesForm(${JSON.stringify(s).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+      <a class="btn sm outline" href="#/series/${s.id}/chapters"><i class="ri-file-list-line"></i>فصول</a>
+      <button class="btn sm danger" onclick="deleteSeries('${s.id}')"><i class="ri-delete-bin-line"></i></button>
+    </div></td>
+  </tr>`).join('')}</table></div>` : `<div class="empty-state"><i class="ri-book-2-line"></i><h3>لا توجد أعمال</h3></div>`;
+}
+function openSeriesForm(s){
+  s=s||{};
+  openModal(`<h3>${s.id?'تعديل':'إضافة'} عمل</h3>
+  <div class="field"><label>العنوان</label><div class="input-wrap"><input id="sf-title" value="${escapeHtml(s.title||'')}"></div></div>
+  <div class="field"><label>الوصف</label><textarea class="ta" id="sf-desc">${escapeHtml(s.description||'')}</textarea></div>
+  <div class="grid grid-2">
+    <div class="field"><label>رابط صورة الغلاف</label><div class="input-wrap"><input id="sf-cover" value="${escapeHtml(s.cover_image||'')}"></div></div>
+    <div class="field"><label>رابط صورة البانر</label><div class="input-wrap"><input id="sf-banner" value="${escapeHtml(s.banner_image||'')}"></div></div>
+  </div>
+  <div class="grid grid-3">
+    <div class="field"><label>النوع</label><div class="input-wrap"><select id="sf-type">
+      <option value="manga" ${s.series_type==='manga'?'selected':''}>مانجا</option>
+      <option value="manhwa" ${s.series_type==='manhwa'?'selected':''}>مانهوا</option>
+      <option value="manhua" ${s.series_type==='manhua'?'selected':''}>مانهوا صينية</option>
+    </select></div></div>
+    <div class="field"><label>الحالة</label><div class="input-wrap"><select id="sf-status">
+      <option value="ongoing" ${s.status==='ongoing'?'selected':''}>مستمر</option>
+      <option value="completed" ${s.status==='completed'?'selected':''}>مكتمل</option>
+      <option value="upcoming" ${s.status==='upcoming'?'selected':''}>قريباً</option>
+    </select></div></div>
+    <div class="field"><label>السنة</label><div class="input-wrap"><input id="sf-year" type="number" value="${s.year||''}"></div></div>
+  </div>
+  <div class="field"><label>التصنيفات (مفصولة بفاصلة)</label><div class="input-wrap"><input id="sf-genres" value="${escapeHtml((s.genres||[]).join('، '))}"></div></div>
+  <div class="field row"><input type="checkbox" id="sf-featured" ${s.is_featured?'checked':''}>  <label style="margin:0">تمييز في البانر الرئيسي (Hero)</label></div>
+  <div class="row" style="gap:10px;margin-top:6px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button>
+  <button class="btn" style="flex:1" onclick="saveSeries('${s.id||''}')">حفظ</button></div>`);
+}
+async function saveSeries(id){
+  const genres=document.getElementById('sf-genres').value.split(/[،,]/).map(s=>s.trim()).filter(Boolean);
+  const payload={title:document.getElementById('sf-title').value.trim(),description:document.getElementById('sf-desc').value.trim(),cover_image:document.getElementById('sf-cover').value.trim(),banner_image:document.getElementById('sf-banner').value.trim(),series_type:document.getElementById('sf-type').value,status:document.getElementById('sf-status').value,year:parseInt(document.getElementById('sf-year').value)||null,genres,is_featured:document.getElementById('sf-featured').checked};
+  if(!payload.title) return toast('العنوان مطلوب');
+  const {error}=id?await sb.from('series').update(payload).eq('id',id):await sb.from('series').insert(payload);
+  if(error) return toast('تعذر الحفظ');
+  closeModal(); toast('تم الحفظ بنجاح'); renderRoute();
+}
+async function deleteSeries(id){ if(!confirm('حذف هذا العمل وكل فصوله؟'))return; await sb.from('series').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ CHAPTERS + PAGES MANAGEMENT ============ */
+route('#/series/:id/chapters',async(p)=>{
+  const {data:series}=await sb.from('series').select('*').eq('id',p.id).single();
+  document.getElementById('app').innerHTML=`
+  <div class="section-title"><h2>فصول: ${escapeHtml(series?.title||'')}</h2>
+    <button class="btn" onclick="openChapterForm('${p.id}')"><i class="ri-add-line"></i>إضافة فصل</button></div>
+  <a class="btn outline sm" href="#/series" style="margin-bottom:14px;display:inline-flex"><i class="ri-arrow-right-line"></i>رجوع</a>
+  <div id="ch-table"><div class="spinner"></div></div>`;
+  loadChaptersTable(p.id);
+});
+async function loadChaptersTable(seriesId){
+  const {data}=await sb.from('chapters').select('*, direct_links(title)').eq('series_id',seriesId).order('chapter_number');
+  document.getElementById('ch-table').innerHTML=(data&&data.length)?`<div class="card" style="overflow-x:auto"><table>
+  <tr><th>#</th><th>عنوان</th><th>الوصول</th><th>رابط مباشر</th><th>التاريخ</th><th>الصفحات</th><th>إجراءات</th></tr>
+  ${await Promise.all(data.map(async c=>{
+    const {count}=await sb.from('chapter_pages').select('*',{count:'exact',head:true}).eq('chapter_id',c.id);
+    const accessLabel=c.access_type==='free'?'<span class="chip">مجاني</span>':c.access_type==='subscribers'?'<span class="chip warn"><i class="ri-vip-crown-line"></i>مشتركون</span>':`<span class="chip gold"><i class="ri-coin-line"></i>${c.points_price} نقطة</span>`;
+    return `<tr>
+      <td>${c.chapter_number}</td><td>${escapeHtml(c.title||'-')}</td><td>${accessLabel}</td>
+      <td>${c.direct_links?`<span class="chip gray"><i class="ri-link"></i> ${escapeHtml(c.direct_links.title)}</span>`:'-'}</td>
+      <td>${new Date(c.release_date).toLocaleDateString('ar')}</td><td>${count||0} صفحة</td>
+      <td><div class="row">
+        <button class="btn sm ghost" onclick='openChapterForm("${seriesId}",${JSON.stringify(c).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+        <button class="btn sm outline" onclick="managePages('${c.id}','${seriesId}')"><i class="ri-image-line"></i>صور</button>
+        <button class="btn sm danger" onclick="deleteChapter('${c.id}','${seriesId}')"><i class="ri-delete-bin-line"></i></button>
+      </div></td>
+    </tr>`;})).then(rows=>rows.join(''))}</table></div>` : `<div class="empty-state"><i class="ri-file-list-line"></i><h3>لا توجد فصول</h3></div>`;
+}
+async function openChapterForm(seriesId,c){
+  c=c||{};
+  const {data:dlinks}=await sb.from('direct_links').select('*').eq('is_active',true).order('created_at',{ascending:false});
+  openModal(`<h3>${c.id?'تعديل':'إضافة'} فصل</h3>
+  <div class="grid grid-2">
+    <div class="field"><label>رقم الفصل</label><div class="input-wrap"><input id="cf-num" type="number" value="${c.chapter_number||''}"></div></div>
+    <div class="field"><label>عنوان الفصل (اختياري)</label><div class="input-wrap"><input id="cf-title" value="${escapeHtml(c.title||'')}"></div></div>
+  </div>
+  <div class="field"><label>نوع الوصول</label><div class="input-wrap"><select id="cf-access" onchange="togglePointsPrice()">
+    <option value="free" ${c.access_type==='free'?'selected':''}>مجاني للجميع</option>
+    <option value="subscribers" ${c.access_type==='subscribers'?'selected':''}>للمشتركين فقط</option>
+    <option value="points" ${c.access_type==='points'?'selected':''}>بالنقاط</option>
+  </select></div></div>
+  <div class="field" id="pts-price-field" style="${c.access_type==='points'?'':'display:none'}">
+    <label>سعر الفتح بالنقاط</label><div class="input-wrap"><input id="cf-pts" type="number" value="${c.points_price||0}" min="0"></div>
+  </div>
+  <div class="field"><label>رابط مباشر (اختياري - يلزم القارئ بالمتابعة عبره قبل قراءة هذا الفصل تحديداً)</label><div class="input-wrap"><select id="cf-dlink">
+    <option value="">بدون</option>
+    ${(dlinks||[]).map(d=>`<option value="${d.id}" ${c.direct_link_id===d.id?'selected':''}>${escapeHtml(d.title)}</option>`).join('')}
+  </select></div></div>
+  <div class="field"><label>تاريخ النشر</label><div class="input-wrap"><input id="cf-date" type="datetime-local" value="${c.release_date?new Date(c.release_date).toISOString().slice(0,16):''}"></div></div>
+  <div class="row" style="gap:10px;margin-top:6px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button>
+  <button class="btn" style="flex:1" onclick="saveChapter('${seriesId}','${c.id||''}')">حفظ</button></div>`);
+}
+function togglePointsPrice(){ const v=document.getElementById('cf-access').value; document.getElementById('pts-price-field').style.display=v==='points'?'':'none'; }
+async function saveChapter(seriesId,id){
+  const payload={series_id:seriesId,chapter_number:parseFloat(document.getElementById('cf-num').value),title:document.getElementById('cf-title').value.trim(),access_type:document.getElementById('cf-access').value,points_price:parseInt(document.getElementById('cf-pts').value)||0,direct_link_id:document.getElementById('cf-dlink').value||null,release_date:document.getElementById('cf-date').value?new Date(document.getElementById('cf-date').value).toISOString():new Date().toISOString()};
+  if(!payload.chapter_number) return toast('رقم الفصل مطلوب');
+  const {error}=id?await sb.from('chapters').update(payload).eq('id',id):await sb.from('chapters').insert(payload);
+  if(error) return toast('تعذر الحفظ');
+  closeModal(); toast('تم الحفظ'); renderRoute();
+}
+async function deleteChapter(id,seriesId){ if(!confirm('حذف هذا الفصل وكل صوره؟'))return; await sb.from('chapter_pages').delete().eq('chapter_id',id); await sb.from('chapters').delete().eq('id',id); toast('تم الحذف'); go('#/series/'+seriesId+'/chapters'); renderRoute(); }
+
+/* ---------- PAGES MANAGEMENT ---------- */
+async function managePages(chapterId, seriesId){
+  const {data:pages}=await sb.from('chapter_pages').select('*').eq('chapter_id',chapterId).order('page_number');
+  openModal(`<h3>إدارة صفحات الفصل</h3>
+  <div class="tabs">
+    <button class="tab active" id="tab-upload" onclick="switchPagesTab('upload')"><i class="ri-upload-cloud-line"></i> رفع صور</button>
+    <button class="tab" id="tab-links" onclick="switchPagesTab('links')"><i class="ri-links-line"></i> روابط مباشرة</button>
+  </div>
+  <div id="pages-upload-panel">
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event,'${chapterId}')">
+      <i class="ri-image-add-line" style="font-size:32px;color:var(--accent);margin-bottom:8px"></i>
+      <p style="margin:0;font-size:13px">اسحب الصور هنا أو اضغط للاختيار<br><span class="muted" style="font-size:11px">يمكن تحديد أكثر من صورة دفعة واحدة</span></p>
+      <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handleFileSelect(this.files,'${chapterId}')">
+    </div>
+    <div id="upload-progress" style="margin-top:10px"></div>
+  </div>
+  <div id="pages-links-panel" style="display:none">
+    <p class="muted" style="font-size:12.5px;margin-bottom:8px">أضف رابطاً مباشراً لكل صورة (سطر لكل رابط)</p>
+    <textarea class="ta" id="links-input" style="min-height:120px" placeholder="https://example.com/page1.jpg
+https://example.com/page2.jpg"></textarea>
+    <button class="btn" style="margin-top:8px" onclick="savePageLinks('${chapterId}')">حفظ الروابط</button>
+  </div>
+  <div style="margin-top:16px"><b style="font-size:13px">الصفحات الحالية (${pages?.length||0}) — اسحب لإعادة الترتيب</b>
+  <div class="sortable-pages" id="pages-grid">
+    ${(pages||[]).map(pg=>`<div class="page-thumb" data-id="${pg.id}" draggable="true" ondragstart="dragStart(event)" ondragover="event.preventDefault()" ondrop="dropPage(event,'${chapterId}')">
+      <img src="${pg.image_url}"><div class="rm" onclick="deletePage('${pg.id}','${chapterId}','${seriesId}')">✕</div>
+    </div>`).join('')}
+  </div></div>
+  <div class="row" style="gap:10px;margin-top:14px"><button class="btn outline" onclick="closeModal()">إغلاق</button></div>`);
+}
+function switchPagesTab(tab){
+  document.getElementById('tab-upload').classList.toggle('active',tab==='upload');
+  document.getElementById('tab-links').classList.toggle('active',tab==='links');
+  document.getElementById('pages-upload-panel').style.display=tab==='upload'?'':'none';
+  document.getElementById('pages-links-panel').style.display=tab==='links'?'':'none';
+}
+async function handleFileSelect(files,chapterId){
+  const prog=document.getElementById('upload-progress');
+  prog.innerHTML=`<div style="font-size:12.5px;color:var(--muted)">جاري رفع ${files.length} صورة...</div>`;
+  const existing=await sb.from('chapter_pages').select('page_number').eq('chapter_id',chapterId).order('page_number',{ascending:false}).limit(1);
+  let nextNum=(existing.data?.[0]?.page_number||0)+1;
+  let done=0;
+  for(const file of Array.from(files).sort((a,b)=>a.name.localeCompare(b.name))){
+    const ext=file.name.split('.').pop();
+    const path=`chapters/${chapterId}/${nextNum}_${Date.now()}.${ext}`;
+    const {error:upErr}=await sb.storage.from('manga-pages').upload(path,file,{cacheControl:'3600',upsert:false});
+    if(upErr){ prog.innerHTML+=`<div style="color:var(--danger);font-size:12px">فشل رفع ${file.name}</div>`; nextNum++; continue; }
+    const {data:{publicUrl}}=sb.storage.from('manga-pages').getPublicUrl(path);
+    await sb.from('chapter_pages').insert({chapter_id:chapterId,page_number:nextNum,image_url:publicUrl});
+    done++; nextNum++;
+    prog.innerHTML=`<div style="font-size:12.5px;color:var(--accent)">تم رفع ${done} من ${files.length}</div>`;
+  }
+  prog.innerHTML=`<div style="font-size:12.5px;color:var(--accent)">✓ اكتمل رفع ${done} صورة</div>`;
+  const {data:serData}=await sb.from('chapters').select('series_id').eq('id',chapterId).single();
+  managePages(chapterId, serData?.series_id||'');
+}
+function handleDrop(event,chapterId){ event.preventDefault(); document.getElementById('drop-zone').classList.remove('dragover'); handleFileSelect(event.dataTransfer.files,chapterId); }
+async function savePageLinks(chapterId){
+  const raw=document.getElementById('links-input').value.trim();
+  const urls=raw.split(/\r?\n/).map(s=>s.trim()).filter(s=>s.startsWith('http'));
+  if(!urls.length) return toast('لم يتم العثور على روابط صحيحة');
+  const existing=await sb.from('chapter_pages').select('page_number').eq('chapter_id',chapterId).order('page_number',{ascending:false}).limit(1);
+  let nextNum=(existing.data?.[0]?.page_number||0)+1;
+  const rows=urls.map(url=>({chapter_id:chapterId,page_number:nextNum++,image_url:url}));
+  const {error}=await sb.from('chapter_pages').insert(rows);
+  if(error) return toast('تعذر الحفظ');
+  toast('تم حفظ '+urls.length+' رابط'); document.getElementById('links-input').value='';
+  const {data:serData}=await sb.from('chapters').select('series_id').eq('id',chapterId).single();
+  managePages(chapterId, serData?.series_id||'');
+}
+async function deletePage(pageId,chapterId,seriesId){ await sb.from('chapter_pages').delete().eq('id',pageId); toast('تم حذف الصفحة'); managePages(chapterId,seriesId); }
+let dragSrc=null;
+function dragStart(e){ dragSrc=e.target.closest('.page-thumb'); }
+async function dropPage(e,chapterId){
+  e.preventDefault();
+  const target=e.target.closest('.page-thumb');
+  if(!target||!dragSrc||target===dragSrc) return;
+  const grid=document.getElementById('pages-grid');
+  const thumbs=[...grid.querySelectorAll('.page-thumb')];
+  const srcIdx=thumbs.indexOf(dragSrc); const tgtIdx=thumbs.indexOf(target);
+  if(srcIdx<tgtIdx) target.after(dragSrc); else target.before(dragSrc);
+  const newOrder=[...grid.querySelectorAll('.page-thumb')].map(el=>el.dataset.id);
+  for(let i=0;i<newOrder.length;i++) await sb.from('chapter_pages').update({page_number:i+1}).eq('id',newOrder[i]);
+  toast('تم حفظ الترتيب');
+}
+
+/* ============ CHAPTERS LOCK MANAGER ============ */
+route('#/chapters-lock',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>إدارة قفل الفصول</h2></div>
+  <div class="field"><div class="input-wrap"><i class="ri-search-line"></i><input placeholder="ابحث عن عمل..." oninput="loadLockTable(this.value)"></div></div>
+  <p class="muted" style="font-size:12.5px;margin-bottom:14px">يمكنك تغيير نوع وصول أي فصل في أي وقت — مجاني / للمشتركين / بالنقاط</p>
+  <div id="lock-table"><div class="spinner"></div></div>`;
+  loadLockTable('');
+});
+async function loadLockTable(q){
+  let query=sb.from('series').select('id,title').order('title');
+  if(q) query=query.ilike('title','%'+q+'%');
+  const {data:series}=await query.limit(30);
+  if(!series?.length){ document.getElementById('lock-table').innerHTML=`<div class="empty-state"><i class="ri-inbox-line"></i><h3>لا توجد أعمال</h3></div>`; return; }
+  let html='';
+  for(const s of series){
+    const {data:chs}=await sb.from('chapters').select('*').eq('series_id',s.id).order('chapter_number');
+    if(!chs?.length) continue;
+    html+=`<div class="card" style="margin-bottom:14px"><b>${escapeHtml(s.title)}</b><div class="card" style="margin-top:10px;overflow-x:auto"><table>
+    <tr><th>#</th><th>عنوان</th><th>الوصول الحالي</th><th>السعر (نقاط)</th><th>تغيير</th></tr>
+    ${chs.map(c=>`<tr>
+      <td>${c.chapter_number}</td><td>${escapeHtml(c.title||'-')}</td>
+      <td>${c.access_type==='free'?'<span class="chip">مجاني</span>':c.access_type==='subscribers'?'<span class="chip warn">مشتركون</span>':`<span class="chip gold">${c.points_price} نقطة</span>`}</td>
+      <td><input type="number" id="pts-${c.id}" value="${c.points_price||0}" min="0" style="width:70px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px;text-align:center"></td>
+      <td><div class="row" style="gap:4px">
+        <button class="btn sm" onclick="changeAccess('${c.id}','free',0,'${s.id}')">مجاني</button>
+        <button class="btn sm warn" onclick="changeAccess('${c.id}','subscribers',0,'${s.id}')">مشتركون</button>
+        <button class="btn sm gold" onclick="changeAccess('${c.id}','points',document.getElementById('pts-${c.id}').value,'${s.id}')">نقاط</button>
+      </div></td>
+    </tr>`).join('')}</table></div></div>`;
+  }
+  document.getElementById('lock-table').innerHTML=html||`<div class="empty-state"><i class="ri-lock-2-line"></i><h3>لا توجد فصول</h3></div>`;
+}
+async function changeAccess(chapterId,type,pts,seriesId){
+  const {error}=await sb.from('chapters').update({access_type:type,points_price:parseInt(pts)||0}).eq('id',chapterId);
+  if(error) return toast('تعذر التغيير');
+  toast('تم تحديث نوع الوصول'); loadLockTable('');
+}
+
+/* ============ USERS MANAGEMENT ============ */
+route('#/users',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>إدارة المستخدمين</h2></div>
+  <div class="field"><div class="input-wrap"><i class="ri-search-line"></i><input placeholder="بحث بالبريد أو الاسم..." oninput="loadUsers(this.value)"></div></div>
+  <div id="users-table"><div class="spinner"></div></div>`;
+  loadUsers('');
+});
+async function loadUsers(q){
+  let query=sb.from('profiles').select('*, subscription_plans(name,badge_text,badge_color,tier)').order('created_at',{ascending:false}).limit(100);
+  if(q) query=query.or(`email.ilike.%${q}%,username.ilike.%${q}%,full_name.ilike.%${q}%`);
+  const {data}=await query;
+  document.getElementById('users-table').innerHTML=(data&&data.length)?`<div class="card" style="overflow-x:auto"><table>
+  <tr><th>المستخدم</th><th>البريد</th><th>الدور</th><th>النقاط</th><th>الاشتراك</th><th>إجراءات</th></tr>
+  ${data.map(u=>`<tr>
+    <td>${escapeHtml(u.full_name||u.username||'-')} ${u.subscription_plans?`<span class="badge" style="background:${u.subscription_plans.badge_color}">${escapeHtml(u.subscription_plans.badge_text)}</span>`:''}</td>
+    <td>${escapeHtml(u.email||'')}</td>
+    <td>${u.role==='admin'?'<span class="chip">أدمن</span>':'<span class="chip gray">مستخدم</span>'}</td>
+    <td><b style="color:var(--gold)">${u.points||0}</b></td>
+    <td>${subChip(u.subscription_status)}</td>
+    <td><div class="row">
+      <button class="btn sm ghost" onclick='openUserEdit(${JSON.stringify(u).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+      <button class="btn sm gold" onclick="openAdjustPoints('${u.id}','${escapeHtml(u.username||u.email||'')}')"><i class="ri-coin-line"></i></button>
+    </div></td>
+  </tr>`).join('')}</table></div>` : `<div class="empty-state"><i class="ri-team-line"></i><h3>لا يوجد مستخدمون</h3></div>`;
+}
+function subChip(s){ const m={free:['gray','مجاني'],pending:['warn','معلّق'],active:['','نشط'],expired:['danger','منتهي']}; const [c,l]=m[s]||['gray',s]; return `<span class="chip ${c}">${l}</span>`; }
+function openUserEdit(u){
+  openModal(`<h3>إدارة: ${escapeHtml(u.full_name||u.username||u.email)}</h3>
+  <div class="field"><label>الدور</label><div class="input-wrap"><select id="uu-role"><option value="user" ${u.role==='user'?'selected':''}>مستخدم</option><option value="admin" ${u.role==='admin'?'selected':''}>أدمن</option></select></div></div>
+  <div class="field"><label>حالة الاشتراك</label><div class="input-wrap"><select id="uu-sub"><option value="free" ${u.subscription_status==='free'?'selected':''}>مجاني</option><option value="pending" ${u.subscription_status==='pending'?'selected':''}>معلّق</option><option value="active" ${u.subscription_status==='active'?'selected':''}>نشط</option><option value="expired" ${u.subscription_status==='expired'?'selected':''}>منتهي</option></select></div></div>
+  <div class="field"><label>تاريخ انتهاء الاشتراك</label><div class="input-wrap"><input id="uu-end" type="date" value="${u.subscription_end?u.subscription_end.slice(0,10):''}"></div></div>
+  <div class="field row"><input type="checkbox" id="uu-banned" ${u.is_banned?'checked':''}>  <label style="margin:0">حظر هذا المستخدم</label></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="saveUser('${u.id}')">حفظ</button></div>`);
+}
+async function saveUser(id){
+  const payload={role:document.getElementById('uu-role').value,subscription_status:document.getElementById('uu-sub').value,subscription_end:document.getElementById('uu-end').value?new Date(document.getElementById('uu-end').value).toISOString():null,is_banned:document.getElementById('uu-banned').checked};
+  const {error}=await sb.from('profiles').update(payload).eq('id',id);
+  if(error) return toast('تعذر الحفظ');
+  closeModal(); toast('تم تحديث المستخدم'); renderRoute();
+}
+
+/* ============ POINTS MANAGER ============ */
+route('#/points-manager',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>إدارة نقاط المستخدمين</h2></div>
+  <div class="field"><div class="input-wrap"><i class="ri-search-line"></i><input placeholder="ابحث عن مستخدم..." oninput="loadPMUsers(this.value)"></div></div>
+  <div id="pm-table"><div class="spinner"></div></div>`;
+  loadPMUsers('');
+});
+async function loadPMUsers(q){
+  let query=sb.from('profiles').select('id,username,email,full_name,points').order('points',{ascending:false}).limit(80);
+  if(q) query=query.or(`email.ilike.%${q}%,username.ilike.%${q}%`);
+  const {data}=await query;
+  document.getElementById('pm-table').innerHTML=(data&&data.length)?`<div class="card" style="overflow-x:auto"><table>
+  <tr><th>المستخدم</th><th>البريد</th><th>النقاط الحالية</th><th>إجراء</th></tr>
+  ${data.map(u=>`<tr>
+    <td>${escapeHtml(u.full_name||u.username||'-')}</td><td>${escapeHtml(u.email||'')}</td>
+    <td><b style="color:var(--gold);font-size:15px">${u.points||0}</b></td>
+    <td><button class="btn sm gold" onclick="openAdjustPoints('${u.id}','${escapeHtml(u.username||u.email||'')}')"><i class="ri-coin-line"></i>تعديل النقاط</button></td>
+  </tr>`).join('')}</table></div>` : `<div class="empty-state"><i class="ri-team-line"></i><h3>لا يوجد مستخدمون</h3></div>`;
+}
+function openAdjustPoints(userId,username){
+  openModal(`<h3>تعديل نقاط: ${escapeHtml(username)}</h3>
+  <p class="muted" style="font-size:12.5px;margin-bottom:16px">أدخل عدداً موجباً لإضافة نقاط، أو سالباً لسحبها</p>
+  <div class="field"><label>عدد النقاط (موجب = إضافة | سالب = سحب)</label><div class="input-wrap"><i class="ri-coin-line"></i><input id="adj-amount" type="number" placeholder="مثال: 100 أو -50"></div></div>
+  <div class="field"><label>ملاحظة (سبب التعديل)</label><div class="input-wrap"><input id="adj-note" placeholder="مثال: تعديل يدوي بعد الدفع"></div></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button>
+  <button class="btn gold" style="flex:1" onclick="submitAdjustPoints('${userId}')">تطبيق</button></div>`);
+}
+async function submitAdjustPoints(userId){
+  const amount=parseInt(document.getElementById('adj-amount').value);
+  const note=document.getElementById('adj-note').value.trim()||'تعديل يدوي';
+  if(!amount) return toast('أدخل قيمة صحيحة');
+  const {data,error}=await sb.rpc('admin_adjust_points',{p_user_id:userId,p_amount:amount,p_note:note});
+  if(error||!data?.ok) return toast(data?.msg||'تعذرت العملية');
+  toast(data.msg); closeModal(); renderRoute();
+}
+
+/* ============ POINTS REQUESTS ============ */
+route('#/points-requests',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>طلبات شراء النقاط</h2></div>
+  <p class="muted" style="font-size:12.5px;margin-bottom:14px">تأكد من الدفع قبل قبول الطلب. طلبات العملات المشفرة تحتوي على رابط دليل الدفع.</p>
+  <div id="preq-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('points_requests').select('*, profiles(email,username,full_name,points)').order('created_at',{ascending:false});
+  document.getElementById('preq-table').innerHTML=(data&&data.length)?`<div class="card" style="overflow-x:auto"><table>
+  <tr><th>المستخدم</th><th>النقاط</th><th>السعر</th><th>نوع الدفع</th><th>دليل الدفع</th><th>التواصل</th><th>الحالة</th><th>إجراءات</th></tr>
+  ${data.map(r=>`<tr>
+    <td>${escapeHtml(r.profiles?.full_name||r.profiles?.username||r.profiles?.email||'-')}<br><span class="muted" style="font-size:11px">رصيده: ${r.profiles?.points||0}</span></td>
+    <td><b style="color:var(--gold);font-size:15px">${r.points_amount}</b></td>
+    <td>${r.price_usd?`<b>$${r.price_usd}</b>`:'-'}</td>
+    <td>${r.payment_type==='crypto'?'<span class="chip gold">🪙 مشفرة</span>':'<span class="chip gray">💳 خارجي</span>'}</td>
+    <td>${r.payment_proof_url?`<a href="${escapeHtml(r.payment_proof_url)}" target="_blank" class="btn sm outline"><i class="ri-image-line"></i> دليل</a>`:'-'}</td>
+    <td>${escapeHtml(r.contact_method||'')} ${escapeHtml(r.contact_info||'-')}</td>
+    <td>${r.status==='pending'?'<span class="chip warn">معلّق</span>':r.status==='approved'?'<span class="chip">مقبول</span>':'<span class="chip danger">مرفوض</span>'}</td>
+    <td><div class="row">
+      ${r.status==='pending'?`
+      <button class="btn sm gold" onclick="approvePointsReq('${r.id}','${r.user_id}',${r.points_amount})"><i class="ri-check-line"></i> قبول</button>
+      <button class="btn sm danger" onclick="rejectPointsReq('${r.id}')"><i class="ri-close-line"></i></button>`:''}</div></td>
+  </tr>`).join('')}</table></div>` : `<div class="empty-state"><i class="ri-coin-line"></i><h3>لا توجد طلبات</h3></div>`;
+});
+async function approvePointsReq(reqId,userId,amount){
+  if(!confirm(`إضافة ${amount} نقطة لهذا المستخدم وقبول الطلب؟`)) return;
+  await sb.from('points_requests').update({status:'approved'}).eq('id',reqId);
+  const {data,error}=await sb.rpc('admin_adjust_points',{p_user_id:userId,p_amount:amount,p_note:'قبول طلب شراء نقاط'});
+  if(error) return toast('تعذرت إضافة النقاط');
+  toast('تم قبول الطلب وإضافة النقاط'); renderRoute();
+}
+async function rejectPointsReq(reqId){ await sb.from('points_requests').update({status:'rejected'}).eq('id',reqId); toast('تم رفض الطلب'); renderRoute(); }
+
+/* ============ SUBSCRIPTION REQUESTS ============ */
+route('#/subscription-requests',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>طلبات الاشتراك</h2></div><div id="req-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('subscription_requests').select('*, profiles(email,full_name), subscription_plans(name,duration_days,tier)').order('created_at',{ascending:false});
+  document.getElementById('req-table').innerHTML=(data&&data.length)?`<div class="card" style="overflow-x:auto"><table>
+  <tr><th>المستخدم</th><th>الباقة</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr>
+  ${data.map(r=>`<tr>
+    <td>${escapeHtml(r.profiles?.full_name||r.profiles?.email||'-')}</td><td>${escapeHtml(r.subscription_plans?.name||'-')}</td>
+    <td>${r.status==='pending'?'<span class="chip warn">معلّق</span>':r.status==='approved'?'<span class="chip">مقبول</span>':'<span class="chip danger">مرفوض</span>'}</td>
+    <td>${new Date(r.created_at).toLocaleDateString('ar')}</td>
+    <td><div class="row">${r.status==='pending'?`<button class="btn sm" onclick="approveSubReq('${r.id}','${r.user_id}','${r.plan_id}',${r.subscription_plans?.duration_days||30},${r.subscription_plans?.tier||1})">قبول</button><button class="btn sm danger" onclick="rejectSubReq('${r.id}','${r.user_id}')">رفض</button>`:''}</div></td>
+  </tr>`).join('')}</table></div>` : `<div class="empty-state"><i class="ri-vip-crown-2-line"></i><h3>لا توجد طلبات</h3></div>`;
+});
+async function approveSubReq(reqId,userId,planId,days,tier){
+  const end=new Date(); end.setDate(end.getDate()+parseInt(days));
+  await sb.from('subscription_requests').update({status:'approved'}).eq('id',reqId);
+  await sb.from('profiles').update({subscription_status:'active',subscription_plan_id:planId,subscription_start:new Date().toISOString(),subscription_end:end.toISOString()}).eq('id',userId);
+  // Tier 2+ (Legends) get 10 points on activation
+  if(tier>=2){
+    await sb.rpc('admin_adjust_points',{p_user_id:userId,p_amount:10,p_note:'مكافأة تفعيل باقة أساطير/أسلاف'});
+  }
+  // Yearly plan for Tier 2+ gets monthly bonus note (admin handles monthly bonuses)
+  toast('✓ تم تفعيل الاشتراك للمستخدم'); renderRoute();
+}
+async function rejectSubReq(reqId,userId){ await sb.from('subscription_requests').update({status:'rejected'}).eq('id',reqId); await sb.from('profiles').update({subscription_status:'free'}).eq('id',userId); toast('تم رفض الطلب'); renderRoute(); }
+
+/* ============ PLANS (3 مستويات × شهري/سنوي) ============ */
+route('#/plans',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>باقات الاشتراك</h2><button class="btn" onclick="openPlanForm()"><i class="ri-add-line"></i>إضافة باقة</button></div><div id="plans-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('subscription_plans').select('*').order('tier').order('billing_period');
+  document.getElementById('plans-table').innerHTML=(data&&data.length)?data.map(p=>`
+  <div class="card" style="margin-bottom:12px"><div class="row between">
+    <div><b>${escapeHtml(p.name)}</b> <span class="badge" style="background:${p.badge_color||'#22c55e'}">${escapeHtml(p.badge_text||'مميز')}</span> <span class="chip gray">مستوى ${p.tier} - ${TIER_NAMES[p.tier]}</span> <span class="chip gray">${p.billing_period==='monthly'?'شهري':'سنوي'}</span>
+    <p class="muted" style="font-size:12px;margin:6px 0 0">${p.price} USD / ${p.duration_days} يوم</p></div>
+    <div class="row"><button class="btn sm ghost" onclick='openPlanForm(${JSON.stringify(p).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+    <button class="btn sm danger" onclick="deletePlan('${p.id}')"><i class="ri-delete-bin-line"></i></button></div>
+  </div></div>`).join('') : `<div class="empty-state"><i class="ri-price-tag-3-line"></i><h3>لا توجد باقات</h3></div>`;
+});
+function openPlanForm(p){
+  p=p||{};
+  openModal(`<h3>${p.id?'تعديل':'إضافة'} باقة</h3>
+  <div class="field"><label>اسم الباقة</label><div class="input-wrap"><input id="pf-name" value="${escapeHtml(p.name||'')}"></div></div>
+  <div class="grid grid-2">
+    <div class="field"><label>المستوى</label><div class="input-wrap"><select id="pf-tier">
+      <option value="1" ${p.tier===1?'selected':''}>1 - محارب</option>
+      <option value="2" ${p.tier===2?'selected':''}>2 - أساطير</option>
+      <option value="3" ${p.tier===3?'selected':''}>3 - أسلاف</option>
+    </select></div></div>
+    <div class="field"><label>الدورة</label><div class="input-wrap"><select id="pf-billing">
+      <option value="monthly" ${p.billing_period==='monthly'?'selected':''}>شهري</option>
+      <option value="yearly" ${p.billing_period==='yearly'?'selected':''}>سنوي</option>
+    </select></div></div>
+  </div>
+  <div class="grid grid-2">
+    <div class="field"><label>السعر (USD)</label><div class="input-wrap"><input id="pf-price" type="number" value="${p.price||0}" min="0" step="0.01"></div></div>
+    <div class="field"><label>مدة الاشتراك (يوم)</label><div class="input-wrap"><input id="pf-dur" type="number" value="${p.duration_days||30}"></div></div>
+  </div>
+  <div class="grid grid-2">
+    <div class="field"><label>نص البادج</label><div class="input-wrap"><input id="pf-badge-text" value="${escapeHtml(p.badge_text||'مميز')}"></div></div>
+    <div class="field"><label>لون البادج الافتراضي</label><div class="input-wrap" style="padding:6px 12px"><input id="pf-badge-color" type="color" value="${p.badge_color||'#22c55e'}" style="width:100%;height:38px;padding:0;border:none;background:transparent"></div></div>
+  </div>
+  <div class="field"><label>المميزات (كل ميزة في سطر)</label><textarea class="ta" id="pf-features">${(p.features||[]).join('\n')}</textarea></div>
+  <div class="field row"><input type="checkbox" id="pf-active" ${p.is_active!==false?'checked':''}>  <label style="margin:0">باقة مفعّلة</label></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="savePlan('${p.id||''}')">حفظ</button></div>`);
+}
+async function savePlan(id){
+  const features=document.getElementById('pf-features').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const payload={name:document.getElementById('pf-name').value.trim(),tier:parseInt(document.getElementById('pf-tier').value),billing_period:document.getElementById('pf-billing').value,price:parseFloat(document.getElementById('pf-price').value)||0,currency:'USD',duration_days:parseInt(document.getElementById('pf-dur').value)||30,features,badge_text:document.getElementById('pf-badge-text').value.trim(),badge_color:document.getElementById('pf-badge-color').value,is_active:document.getElementById('pf-active').checked};
+  if(!payload.name) return toast('اسم الباقة مطلوب');
+  const {error}=id?await sb.from('subscription_plans').update(payload).eq('id',id):await sb.from('subscription_plans').insert(payload);
+  if(error) return toast('تعذر الحفظ');
+  closeModal(); toast('تم الحفظ'); renderRoute();
+}
+async function deletePlan(id){ if(!confirm('حذف؟'))return; await sb.from('subscription_plans').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ AVATAR STORE (مع قفل حسب المستوى وGIF) ============ */
+route('#/avatar-store',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>متجر البروفيلات</h2><button class="btn" onclick="openAvatarForm()"><i class="ri-add-line"></i>إضافة بروفايل</button></div><div id="avs-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('avatar_store').select('*').order('created_at',{ascending:false});
+  const tierLabels={0:'للجميع',1:'محارب+',2:'أساطير+',3:'أسلاف فقط'};
+  document.getElementById('avs-table').innerHTML=(data&&data.length)?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">${data.map(a=>`
+  <div style="background:var(--card);border-radius:14px;padding:10px;text-align:center;border:1px solid var(--border)">
+    <img src="${a.image_url}" style="width:100%;height:100px;object-fit:cover;border-radius:10px;margin-bottom:8px">
+    <div style="font-size:12px;font-weight:700;margin-bottom:4px">${escapeHtml(a.name)} ${a.is_animated?'<span class="chip gold" style="font-size:9px">GIF</span>':''}</div>
+    <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${a.price_points===0?'مجاني':a.price_points+' نقطة'}</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:8px">${tierLabels[a.requires_tier]||''}</div>
+    <div class="row" style="gap:6px"><button class="btn sm ghost" onclick='openAvatarForm(${JSON.stringify(a).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+    <button class="btn sm danger" onclick="deleteAvatar('${a.id}')"><i class="ri-delete-bin-line"></i></button></div>
+  </div>`).join('')}</div>` : `<div class="empty-state"><i class="ri-user-star-line"></i><h3>لا توجد بروفيلات</h3></div>`;
+});
+function openAvatarForm(a){
+  a=a||{};
+  openModal(`<h3>${a.id?'تعديل':'إضافة'} بروفايل</h3>
+  <div class="field"><label>الاسم</label><div class="input-wrap"><input id="af-name" value="${escapeHtml(a.name||'')}"></div></div>
+  <div class="field"><label>رابط الصورة (أو ارفع من الأسفل)</label><div class="input-wrap"><input id="af-url" value="${escapeHtml(a.image_url||'')}"></div></div>
+  <div class="field"><label>رفع صورة أو GIF مباشرة</label>
+    <input type="file" accept="image/*,.gif" onchange="uploadAvatarImage(this.files[0])" style="color:var(--text)"></div>
+  <div class="grid grid-2">
+    <div class="field"><label>السعر بالنقاط</label><div class="input-wrap"><input id="af-price" type="number" value="${a.price_points||0}" min="0"></div></div>
+    <div class="field"><label>يتطلب مستوى اشتراك</label><div class="input-wrap"><select id="af-tier">
+      <option value="0" ${!a.requires_tier?'selected':''}>0 - للجميع</option>
+      <option value="1" ${a.requires_tier===1?'selected':''}>1 - محارب+</option>
+      <option value="2" ${a.requires_tier===2?'selected':''}>2 - أساطير+</option>
+      <option value="3" ${a.requires_tier===3?'selected':''}>3 - أسلاف فقط</option>
+    </select></div></div>
+  </div>
+  <div class="field row"><input type="checkbox" id="af-animated" ${a.is_animated?'checked':''}>  <label style="margin:0">بروفايل متحرك (GIF)</label></div>
+  <div class="field row"><input type="checkbox" id="af-active" ${a.is_active!==false?'checked':''}>  <label style="margin:0">مفعّل في المتجر</label></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="saveAvatar('${a.id||''}')">حفظ</button></div>`);
+}
+async function uploadAvatarImage(file){
+  if(!file) return;
+  const path=`avatars/${Date.now()}_${file.name}`;
+  const {error}=await sb.storage.from('avatar-store').upload(path,file,{cacheControl:'3600',upsert:false});
+  if(error) return toast('فشل رفع الصورة');
+  const {data:{publicUrl}}=sb.storage.from('avatar-store').getPublicUrl(path);
+  document.getElementById('af-url').value=publicUrl;
+  if(file.name.toLowerCase().endsWith('.gif')) document.getElementById('af-animated').checked=true;
+  toast('تم الرفع ✓');
+}
+async function saveAvatar(id){
+  const payload={name:document.getElementById('af-name').value.trim(),image_url:document.getElementById('af-url').value.trim(),price_points:parseInt(document.getElementById('af-price').value)||0,requires_tier:parseInt(document.getElementById('af-tier').value)||0,is_animated:document.getElementById('af-animated').checked,is_active:document.getElementById('af-active').checked};
+  if(!payload.name||!payload.image_url) return toast('الاسم والصورة مطلوبان');
+  const {error}=id?await sb.from('avatar_store').update(payload).eq('id',id):await sb.from('avatar_store').insert(payload);
+  if(error) return toast('تعذر الحفظ');
+  closeModal(); toast('تم الحفظ'); renderRoute();
+}
+async function deleteAvatar(id){ if(!confirm('حذف؟'))return; await sb.from('avatar_store').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ NEWS ============ */
+route('#/news',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>الأخبار والمواسم</h2><button class="btn" onclick="openNewsForm()"><i class="ri-add-line"></i>إضافة خبر</button></div><div id="news-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('news').select('*').order('created_at',{ascending:false});
+  document.getElementById('news-table').innerHTML=(data&&data.length)?data.map(n=>`
+  <div class="card" style="margin-bottom:12px"><div class="row between">
+    <div><b>${n.is_pinned?'📌 ':''}${escapeHtml(n.title)}</b><p class="muted" style="font-size:12px;margin:4px 0">${new Date(n.created_at).toLocaleDateString('ar')}</p></div>
+    <div class="row"><button class="btn sm ghost" onclick='openNewsForm(${JSON.stringify(n).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+    <button class="btn sm danger" onclick="deleteNews('${n.id}')"><i class="ri-delete-bin-line"></i></button></div>
+  </div></div>`).join('') : `<div class="empty-state"><i class="ri-newspaper-line"></i><h3>لا توجد أخبار</h3></div>`;
+});
+function openNewsForm(n){ n=n||{}; openModal(`<h3>${n.id?'تعديل':'إضافة'} خبر</h3>
+  <div class="field"><label>العنوان</label><div class="input-wrap"><input id="nf-title" value="${escapeHtml(n.title||'')}"></div></div>
+  <div class="field"><label>المحتوى</label><textarea class="ta" id="nf-content">${escapeHtml(n.content||'')}</textarea></div>
+  <div class="field"><label>رابط صورة</label><div class="input-wrap"><input id="nf-image" value="${escapeHtml(n.image||'')}"></div></div>
+  <div class="field row"><input type="checkbox" id="nf-pinned" ${n.is_pinned?'checked':''}>  <label style="margin:0">تثبيت</label></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="saveNews('${n.id||''}')">حفظ</button></div>`); }
+async function saveNews(id){ const payload={title:document.getElementById('nf-title').value.trim(),content:document.getElementById('nf-content').value.trim(),image:document.getElementById('nf-image').value.trim(),is_pinned:document.getElementById('nf-pinned').checked}; if(!payload.title) return toast('العنوان مطلوب'); const {error}=id?await sb.from('news').update(payload).eq('id',id):await sb.from('news').insert(payload); if(error) return toast('تعذر الحفظ'); closeModal(); toast('تم الحفظ'); renderRoute(); }
+async function deleteNews(id){ if(!confirm('حذف؟'))return; await sb.from('news').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ POLLS (مع صورة) ============ */
+route('#/polls',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>التصويتات</h2><button class="btn" onclick="openPollForm()"><i class="ri-add-line"></i>إضافة تصويت</button></div><div id="polls-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('polls').select('*').order('created_at',{ascending:false});
+  document.getElementById('polls-table').innerHTML=(data&&data.length)?await Promise.all(data.map(async pl=>{ const {count}=await sb.from('poll_votes').select('*',{count:'exact',head:true}).eq('poll_id',pl.id); return `<div class="card" style="margin-bottom:12px"><div class="row between">
+  ${pl.image_url?`<img src="${pl.image_url}" style="width:50px;height:50px;object-fit:cover;border-radius:8px">`:''}
+  <div style="flex:1"><b>${escapeHtml(pl.question)}</b><p class="muted" style="font-size:12px;margin:4px 0">${(pl.options||[]).length} خيارات | ${count||0} صوت | ${pl.is_active?'مفعّل':'متوقف'}</p></div><button class="btn sm danger" onclick="deletePoll('${pl.id}')"><i class="ri-delete-bin-line"></i></button></div></div>`; })).then(a=>a.join('')) : `<div class="empty-state"><i class="ri-bar-chart-box-line"></i><h3>لا توجد تصويتات</h3></div>`;
+});
+function openPollForm(){ openModal(`<h3>إضافة تصويت</h3>
+  <div class="field"><label>السؤال</label><div class="input-wrap"><input id="poll-q"></div></div>
+  <div class="field"><label>صورة التصويت (اختياري)</label><div class="input-wrap"><input id="poll-image-url" placeholder="رابط الصورة"></div>
+    <input type="file" accept="image/*" onchange="uploadPollImage(this.files[0])" style="color:var(--text);margin-top:6px"></div>
+  <div class="field"><label>الخيارات (كل خيار في سطر)</label><textarea class="ta" id="poll-opts" placeholder="خيار 1&#10;خيار 2"></textarea></div>
+  <div class="field"><label>تاريخ الانتهاء (اختياري)</label><div class="input-wrap"><input id="poll-ends" type="datetime-local"></div></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="savePoll()">نشر</button></div>`); }
+async function uploadPollImage(file){
+  if(!file) return;
+  const path=`polls/${Date.now()}_${file.name}`;
+  const {error}=await sb.storage.from('site-images').upload(path,file,{cacheControl:'3600',upsert:false});
+  if(error) return toast('فشل رفع الصورة');
+  const {data:{publicUrl}}=sb.storage.from('site-images').getPublicUrl(path);
+  document.getElementById('poll-image-url').value=publicUrl; toast('تم الرفع ✓');
+}
+async function savePoll(){
+  const question=document.getElementById('poll-q').value.trim();
+  const options=document.getElementById('poll-opts').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const image_url=document.getElementById('poll-image-url').value.trim()||null;
+  const endsVal=document.getElementById('poll-ends').value;
+  if(!question||options.length<2) return toast('أدخل سؤالاً وخيارين على الأقل');
+  const {error}=await sb.from('polls').insert({question,options,image_url,ends_at:endsVal?new Date(endsVal).toISOString():null,is_active:true});
+  if(error) return toast('تعذر النشر');
+  closeModal(); toast('تم النشر'); renderRoute();
+}
+async function deletePoll(id){ if(!confirm('حذف؟'))return; await sb.from('polls').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ FORUM ADMIN ============ */
+route('#/forum-admin',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>إدارة المنتدى</h2></div><div id="forum-admin-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('forum_posts').select('*, profiles(email,full_name)').order('created_at',{ascending:false});
+  document.getElementById('forum-admin-table').innerHTML=(data&&data.length)?`<div class="card" style="overflow-x:auto"><table>
+  <tr><th>العنوان</th><th>الكاتب</th><th>صورة</th><th>التاريخ</th><th>إجراءات</th></tr>
+  ${data.map(p=>`<tr><td>${escapeHtml(p.title)}</td><td>${escapeHtml(p.profiles?.full_name||p.profiles?.email||'-')}</td><td>${p.image_url?'<i class="ri-image-fill" style="color:var(--accent)"></i>':'-'}</td><td>${new Date(p.created_at).toLocaleDateString('ar')}</td>
+  <td><div class="row"><button class="btn sm ghost" onclick="togglePin('${p.id}',${p.is_pinned})"><i class="ri-pushpin-line"></i></button>
+  <button class="btn sm danger" onclick="deleteForumPost('${p.id}')"><i class="ri-delete-bin-line"></i></button></div></td></tr>`).join('')}
+  </table></div>` : `<div class="empty-state"><i class="ri-discuss-line"></i><h3>لا توجد مواضيع</h3></div>`;
+});
+async function togglePin(id,current){ await sb.from('forum_posts').update({is_pinned:!current}).eq('id',id); renderRoute(); }
+async function deleteForumPost(id){ if(!confirm('حذف الموضوع وردوده؟'))return; await sb.from('forum_replies').delete().eq('post_id',id); await sb.from('forum_posts').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ ADS CODES (4 مواضع) ============ */
+route('#/ads',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>أكواد الإعلانات</h2><button class="btn" onclick="openAdForm()"><i class="ri-add-line"></i>إضافة كود</button></div>
+  <p class="muted" style="font-size:12.5px;margin-bottom:14px">أضف أكواد Adsterra أو أي شبكة إعلانات. ستُعرض تلقائياً في المواضع المحددة (وتُخفى تلقائياً عن مشتركي باقة المحارب فأعلى).</p>
+  <div id="ads-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('ads_codes').select('*').order('created_at',{ascending:false});
+  const placementLabels={home_top:'أعلى الرئيسية',home_mid:'وسط الرئيسية',home_bottom:'أسفل الرئيسية',series_detail:'صفحة تفاصيل العمل',before_reader:'أعلى القارئ',reader_end:'نهاية الفصل'};
+  document.getElementById('ads-table').innerHTML=(data&&data.length)?data.map(ad=>`
+  <div class="card" style="margin-bottom:12px"><div class="row between">
+    <div><b>${placementLabels[ad.placement]||ad.placement}</b> <span class="chip gray">${escapeHtml(ad.network)}</span> <span class="${ad.is_active?'chip':'chip gray'}">${ad.is_active?'مفعّل':'متوقف'}</span>
+    <p class="muted" style="font-size:11.5px;margin:6px 0;max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(ad.code)}</p></div>
+    <div class="row"><button class="btn sm ghost" onclick='openAdForm(${JSON.stringify(ad).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+    <button class="btn sm danger" onclick="deleteAd('${ad.id}')"><i class="ri-delete-bin-line"></i></button></div>
+  </div></div>`).join('') : `<div class="empty-state"><i class="ri-advertisement-line"></i><h3>لا توجد أكواد</h3></div>`;
+});
+function openAdForm(ad){ ad=ad||{}; openModal(`<h3>${ad.id?'تعديل':'إضافة'} كود إعلان</h3>
+  <div class="field"><label>الموضع</label><div class="input-wrap"><select id="ad-placement">
+    <option value="home_top" ${ad.placement==='home_top'?'selected':''}>أعلى الرئيسية</option>
+    <option value="home_mid" ${ad.placement==='home_mid'?'selected':''}>وسط الرئيسية</option>
+    <option value="home_bottom" ${ad.placement==='home_bottom'?'selected':''}>أسفل الرئيسية</option>
+    <option value="series_detail" ${ad.placement==='series_detail'?'selected':''}>صفحة تفاصيل العمل</option>
+    <option value="before_reader" ${ad.placement==='before_reader'?'selected':''}>أعلى القارئ (بداية الفصل)</option>
+    <option value="reader_end" ${ad.placement==='reader_end'?'selected':''}>نهاية الفصل</option>
+  </select></div></div>
+  <div class="field"><label>الشبكة</label><div class="input-wrap"><select id="ad-network">
+    <option value="adsterra" ${ad.network==='adsterra'?'selected':''}>Adsterra</option>
+    <option value="google_ads" ${ad.network==='google_ads'?'selected':''}>Google Ads</option>
+    <option value="custom" ${ad.network==='custom'?'selected':''}>مخصص</option>
+  </select></div></div>
+  <div class="field"><label>كود الإعلان (HTML/JS)</label><textarea class="ta" id="ad-code" style="min-height:120px">${escapeHtml(ad.code||'')}</textarea></div>
+  <div class="field row"><input type="checkbox" id="ad-active" ${ad.is_active!==false?'checked':''}>  <label style="margin:0">مفعّل</label></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="saveAd('${ad.id||''}')">حفظ</button></div>`); }
+async function saveAd(id){ const payload={placement:document.getElementById('ad-placement').value,network:document.getElementById('ad-network').value,code:document.getElementById('ad-code').value,is_active:document.getElementById('ad-active').checked}; if(!payload.code.trim()) return toast('كود الإعلان مطلوب'); const {error}=id?await sb.from('ads_codes').update(payload).eq('id',id):await sb.from('ads_codes').insert(payload); if(error) return toast('تعذر الحفظ'); closeModal(); toast('تم الحفظ'); renderRoute(); }
+async function deleteAd(id){ if(!confirm('حذف؟'))return; await sb.from('ads_codes').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ DIRECT LINKS (تُربط بفصل معيّن من صفحة الفصول) ============ */
+route('#/direct-links',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>الروابط المباشرة</h2><button class="btn" onclick="openLinkForm()"><i class="ri-add-line"></i>إضافة رابط</button></div>
+  <div class="card" style="margin-bottom:14px;padding:12px 14px">
+    <p style="font-size:12.5px;color:var(--muted);margin:0"><i class="ri-information-line" style="color:var(--accent)"></i> أنشئ الروابط هنا، ثم اربط كل رابط بفصل معيّن من صفحة "إدارة فصول" ذلك العمل. سيُلزَم المستخدم بالضغط على الرابط قبل قراءة الفصل. النقرات تُحسب تلقائياً.</p>
+  </div>
+  <div id="links-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('direct_links').select('*').order('created_at',{ascending:false});
+  document.getElementById('links-table').innerHTML=(data&&data.length)?`<div class="card" style="overflow-x:auto"><table>
+  <tr><th>العنوان</th><th>الرابط</th><th>النقرات</th><th>الحالة</th><th>إجراءات</th></tr>
+  ${data.map(l=>`<tr><td>${escapeHtml(l.title)}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(l.url)}</td>
+  <td><b style="color:var(--accent)">${l.clicks||0}</b></td><td>${l.is_active?'<span class="chip">مفعّل</span>':'<span class="chip gray">متوقف</span>'}</td>
+  <td><div class="row"><button class="btn sm ghost" onclick='openLinkForm(${JSON.stringify(l).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+  <button class="btn sm danger" onclick="deleteLink('${l.id}')"><i class="ri-delete-bin-line"></i></button></div></td></tr>`).join('')}</table></div>` : `<div class="empty-state"><i class="ri-link"></i><h3>لا توجد روابط</h3></div>`;
+});
+function openLinkForm(l){ l=l||{}; openModal(`<h3>${l.id?'تعديل':'إضافة'} رابط مباشر</h3>
+  <div class="field"><label>العنوان</label><div class="input-wrap"><input id="dl-title" value="${escapeHtml(l.title||'')}"></div></div>
+  <div class="field"><label>الرابط</label><div class="input-wrap"><input id="dl-url" value="${escapeHtml(l.url||'')}"></div></div>
+  <div class="field row"><input type="checkbox" id="dl-active" ${l.is_active!==false?'checked':''}>  <label style="margin:0">مفعّل</label></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="saveLink('${l.id||''}')">حفظ</button></div>`); }
+async function saveLink(id){ const payload={title:document.getElementById('dl-title').value.trim(),url:document.getElementById('dl-url').value.trim(),is_active:document.getElementById('dl-active').checked}; if(!payload.title||!payload.url) return toast('أكمل الحقول'); const {error}=id?await sb.from('direct_links').update(payload).eq('id',id):await sb.from('direct_links').insert(payload); if(error) return toast('تعذر الحفظ'); closeModal(); toast('تم الحفظ'); renderRoute(); }
+async function deleteLink(id){ if(!confirm('حذف؟ سيُفصل هذا الرابط تلقائياً عن أي فصول مرتبطة به.'))return; await sb.from('direct_links').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ FAQ ADMIN ============ */
+route('#/faq-admin',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>الأسئلة الشائعة</h2><button class="btn" onclick="openFaqForm()"><i class="ri-add-line"></i>إضافة سؤال</button></div><div id="faq-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('faqs').select('*').order('sort_order');
+  document.getElementById('faq-table').innerHTML=(data&&data.length)?data.map(f=>`
+  <div class="card" style="margin-bottom:12px"><div class="row between">
+    <div style="flex:1"><b>${escapeHtml(f.question)}</b><p class="muted" style="font-size:12px;margin:4px 0">${escapeHtml(f.content).slice(0,90)}${f.content.length>90?'...':''}</p></div>
+    <div class="row"><button class="btn sm ghost" onclick='openFaqForm(${JSON.stringify(f).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+    <button class="btn sm danger" onclick="deleteFaq('${f.id}')"><i class="ri-delete-bin-line"></i></button></div>
+  </div></div>`).join('') : `<div class="empty-state"><i class="ri-question-answer-line"></i><h3>لا توجد أسئلة</h3></div>`;
+});
+function openFaqForm(f){ f=f||{}; openModal(`<h3>${f.id?'تعديل':'إضافة'} سؤال شائع</h3>
+  <div class="field"><label>السؤال</label><div class="input-wrap"><input id="ff-q" value="${escapeHtml(f.question||'')}"></div></div>
+  <div class="field"><label>الإجابة</label><textarea class="ta" id="ff-a">${escapeHtml(f.content||'')}</textarea></div>
+  <div class="field"><label>ترتيب العرض (رقم أصغر يظهر أولاً)</label><div class="input-wrap"><input id="ff-order" type="number" value="${f.sort_order||0}"></div></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="saveFaq('${f.id||''}')">حفظ</button></div>`); }
+async function saveFaq(id){
+  const payload={question:document.getElementById('ff-q').value.trim(),content:document.getElementById('ff-a').value.trim(),sort_order:parseInt(document.getElementById('ff-order').value)||0};
+  if(!payload.question||!payload.content) return toast('أكمل الحقول');
+  const {error}=id?await sb.from('faqs').update(payload).eq('id',id):await sb.from('faqs').insert(payload);
+  if(error) return toast('تعذر الحفظ');
+  closeModal(); toast('تم الحفظ'); renderRoute();
+}
+async function deleteFaq(id){ if(!confirm('حذف؟'))return; await sb.from('faqs').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ SUPPORT ADMIN ============ */
+route('#/support-admin',async()=>{
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>الدعم والتواصل</h2><button class="btn" onclick="openSupportForm()"><i class="ri-add-line"></i>إضافة عنصر</button></div><div id="support-table"><div class="spinner"></div></div>`;
+  const {data}=await sb.from('support_items').select('*').order('sort_order');
+  document.getElementById('support-table').innerHTML=(data&&data.length)?data.map(s=>`
+  <div class="card" style="margin-bottom:12px"><div class="row between">
+    <div style="flex:1"><div class="row" style="gap:8px"><i class="${s.icon||'ri-customer-service-2-line'}" style="color:var(--accent)"></i><b>${escapeHtml(s.title)}</b></div>
+    <p class="muted" style="font-size:12px;margin:4px 0">${escapeHtml(s.content||'')}</p>${s.link_url?`<p class="muted" style="font-size:11px">${escapeHtml(s.link_url)}</p>`:''}</div>
+    <div class="row"><button class="btn sm ghost" onclick='openSupportForm(${JSON.stringify(s).replace(/'/g,"&#39;")})'><i class="ri-edit-line"></i></button>
+    <button class="btn sm danger" onclick="deleteSupportItem('${s.id}')"><i class="ri-delete-bin-line"></i></button></div>
+  </div></div>`).join('') : `<div class="empty-state"><i class="ri-customer-service-2-line"></i><h3>لا توجد عناصر</h3></div>`;
+});
+function openSupportForm(s){ s=s||{}; openModal(`<h3>${s.id?'تعديل':'إضافة'} وسيلة دعم</h3>
+  <div class="field"><label>العنوان</label><div class="input-wrap"><input id="sf2-title" value="${escapeHtml(s.title||'')}"></div></div>
+  <div class="field"><label>الوصف / الرسالة</label><textarea class="ta" id="sf2-content">${escapeHtml(s.content||'')}</textarea></div>
+  <div class="field"><label>رمز Remix Icon (مثال: ri-whatsapp-line)</label><div class="input-wrap"><input id="sf2-icon" value="${escapeHtml(s.icon||'ri-customer-service-2-line')}"></div></div>
+  <div class="field"><label>رابط (اختياري - واتساب/بريد/تيليجرام...)</label><div class="input-wrap"><input id="sf2-link" value="${escapeHtml(s.link_url||'')}" placeholder="https://wa.me/9665..."></div></div>
+  <div class="field"><label>ترتيب العرض</label><div class="input-wrap"><input id="sf2-order" type="number" value="${s.sort_order||0}"></div></div>
+  <div class="row" style="gap:10px"><button class="btn outline" style="flex:1" onclick="closeModal()">إلغاء</button><button class="btn" style="flex:1" onclick="saveSupportItem('${s.id||''}')">حفظ</button></div>`); }
+async function saveSupportItem(id){
+  const payload={title:document.getElementById('sf2-title').value.trim(),content:document.getElementById('sf2-content').value.trim(),icon:document.getElementById('sf2-icon').value.trim()||'ri-customer-service-2-line',link_url:document.getElementById('sf2-link').value.trim()||null,sort_order:parseInt(document.getElementById('sf2-order').value)||0};
+  if(!payload.title) return toast('العنوان مطلوب');
+  const {error}=id?await sb.from('support_items').update(payload).eq('id',id):await sb.from('support_items').insert(payload);
+  if(error) return toast('تعذر الحفظ');
+  closeModal(); toast('تم الحفظ'); renderRoute();
+}
+async function deleteSupportItem(id){ if(!confirm('حذف؟'))return; await sb.from('support_items').delete().eq('id',id); toast('تم الحذف'); renderRoute(); }
+
+/* ============ SETTINGS (تم إصلاح الخلل: لا حاجة لـ JSON.parse/stringify لأن Supabase يتعامل مع jsonb تلقائياً) ============ */
+route('#/settings',async()=>{
+  const {data}=await sb.from('site_settings').select('*');
+  const map={}; (data||[]).forEach(s=>map[s.key]=s.value);
+  const price = map.points_price || {currency:'USD', price_per_point:1};
+  const pkgsDefault = [{points:100,price_usd:1},{points:500,price_usd:4},{points:1000,price_usd:7},{points:2000,price_usd:12},{points:5000,price_usd:25}];
+  const pkgs = map.points_packages || pkgsDefault;
+  document.getElementById('app').innerHTML=`<div class="section-title"><h2>إعدادات الموقع</h2></div>
+
+  <div class="card" style="margin-bottom:14px">
+    <h3 style="margin:0 0 14px;font-size:14px"><i class="ri-settings-3-line" style="color:var(--accent)"></i> الإعدادات العامة</h3>
+    <div class="field"><label>اسم التطبيق</label><div class="input-wrap"><input id="set-name" value="${escapeHtml(map.app_name||'Mangax')}"></div></div>
+    <div class="field row"><input type="checkbox" id="set-maint" ${map.maintenance_mode?'checked':''}>  <label style="margin:0;font-size:13px">تفعيل وضع الصيانة</label></div>
+    <button class="btn" onclick="saveGeneralSettings()"><i class="ri-save-line"></i> حفظ</button>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <h3 style="margin:0 0 6px;font-size:14px"><i class="ri-coin-line" style="color:var(--gold)"></i> إعدادات النقاط</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:14px">العملة الثابتة: دولار أمريكي (USD)</p>
+    <div class="field"><label>سعر النقطة الواحدة (بالدولار)</label><div class="input-wrap"><input id="set-pts-price" type="number" value="${price.price_per_point||1}" min="0.001" step="0.001"></div></div>
+    <button class="btn gold" onclick="savePointsSettings()"><i class="ri-save-line"></i> حفظ</button>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <h3 style="margin:0 0 6px;font-size:14px"><i class="ri-bit-coin-line" style="color:var(--gold)"></i> محفظة العملات المشفرة (USDT TRC20)</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:12px">عنوان المحفظة الذي سيظهر للمستخدمين عند اختيار الدفع بالعملات المشفرة</p>
+    <div class="field"><div class="input-wrap"><input id="set-wallet" value="${escapeHtml(map.crypto_wallet||'')}" placeholder="TRC20 Wallet Address..."></div></div>
+    <button class="btn" style="background:linear-gradient(90deg,#f59e0b,#d97706)" onclick="saveCryptoWallet()"><i class="ri-save-line"></i> حفظ المحفظة</button>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <h3 style="margin:0 0 6px;font-size:14px"><i class="ri-shopping-bag-line" style="color:var(--accent)"></i> باقات النقاط</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">JSON مصفوفة تحتوي على <code style="background:var(--card2);padding:2px 6px;border-radius:4px">points</code> و <code style="background:var(--card2);padding:2px 6px;border-radius:4px">price_usd</code> لكل باقة</p>
+    <textarea class="ta" id="set-pkgs" style="min-height:150px;font-family:monospace;font-size:12px">${JSON.stringify(pkgs, null, 2)}</textarea>
+    <button class="btn" style="margin-top:10px" onclick="savePointsPackages()"><i class="ri-save-line"></i> حفظ الباقات</button>
+    <p class="muted" style="font-size:11px;margin-top:8px">مثال: [{"points":100,"price_usd":1},{"points":500,"price_usd":4}]</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 14px;font-size:14px"><i class="ri-information-line" style="color:var(--accent)"></i> نص "عن التطبيق"</h3>
+    <div class="field"><textarea class="ta" id="set-about" style="min-height:120px">${escapeHtml(map.about_content||'')}</textarea></div>
+    <button class="btn outline" onclick="saveAboutSettings()"><i class="ri-save-line"></i> حفظ</button>
+  </div>`;
+});
+async function upsertSetting(key, value){
+  // First try update, then insert
+  const {data:existing} = await sb.from('site_settings').select('id').eq('key',key).maybeSingle();
+  if(existing){
+    const {error} = await sb.from('site_settings').update({value}).eq('key',key);
+    return error;
+  } else {
+    const {error} = await sb.from('site_settings').insert({key,value});
+    return error;
+  }
+}
+async function saveGeneralSettings(){
+  const e1 = await upsertSetting('app_name', document.getElementById('set-name').value.trim());
+  const e2 = await upsertSetting('maintenance_mode', document.getElementById('set-maint').checked);
+  if(e1||e2) return toast('تعذر الحفظ: '+(e1?.message||e2?.message||''));
+  toast('تم حفظ الإعدادات ✓');
+}
+async function savePointsSettings(){
+  const val={currency:'USD',price_per_point:parseFloat(document.getElementById('set-pts-price').value)||1};
+  const err = await upsertSetting('points_price', val);
+  if(err) return toast('تعذر الحفظ: '+err.message);
+  toast('تم حفظ إعدادات النقاط ✓');
+}
+async function saveAboutSettings(){
+  const err = await upsertSetting('about_content', document.getElementById('set-about').value.trim());
+  if(err) return toast('تعذر الحفظ: '+err.message);
+  toast('تم حفظ نص عن التطبيق ✓');
+}
+async function saveCryptoWallet(){
+  const err = await upsertSetting('crypto_wallet', document.getElementById('set-wallet').value.trim());
+  if(err) return toast('تعذر الحفظ: '+err.message);
+  toast('تم حفظ عنوان المحفظة ✓');
+}
+async function savePointsPackages(){
+  const raw = document.getElementById('set-pkgs').value.trim();
+  try{
+    const pkgs = JSON.parse(raw);
+    if(!Array.isArray(pkgs)) throw new Error('يجب أن يكون مصفوفة JSON');
+    const err = await upsertSetting('points_packages', pkgs);
+    if(err) return toast('تعذر الحفظ: '+err.message);
+    toast('تم حفظ باقات النقاط ✓');
+  }catch(e){ toast('خطأ في صياغة JSON: '+e.message); }
+}
+
+/* ============ INIT ============ */
+renderRoute();
+</script>
+</body>
+</html>
